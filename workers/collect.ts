@@ -7,6 +7,7 @@ import { parseFeed, type RawItem } from './parse'
 import { isAllowed, USER_AGENT } from './robots'
 import { formIndexUrl, parseFormIndex, recentWeekdays } from './sec'
 import type { Source } from './sources'
+import { parseFormD } from './formd'
 
 const dry = process.argv.includes('--dry')
 const url = process.env.SUPABASE_URL
@@ -82,6 +83,70 @@ async function store(items: RawItem[]) {
   return data?.length ?? 0
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+/** Reads amount, sector and state for new Form D filings (max per run keeps the job short). */
+async function enrichFormD(maxPerRun = 120) {
+  if (!db) return { checked: 0, added: 0 }
+  const { data: items, error } = await db
+    .from('items')
+    .select('id,url,title,published_at')
+    .eq('source_id', 'sec-edgar-formd')
+    .order('published_at', { ascending: false })
+    .limit(600)
+  if (error) throw error
+  const ids = (items ?? []).map((i) => i.id)
+  const done = new Set<string>()
+  for (let i = 0; i < ids.length; i += 200) {
+    const { data } = await db.from('deals').select('item_id').in('item_id', ids.slice(i, i + 200))
+    data?.forEach((d) => done.add(d.item_id))
+  }
+  const todo = (items ?? []).filter((i) => !done.has(i.id)).slice(0, maxPerRun)
+  let added = 0
+  for (const it of todo) {
+    // url: https://www.sec.gov/Archives/edgar/data/{cik}/{accNoDash}/{acc}-index.htm
+    const m = it.url.match(/\/data\/(\d+)\/(\d+)\//)
+    if (!m) continue
+    const base = `https://www.sec.gov/Archives/edgar/data/${m[1]}/${m[2]}/`
+    let xml: string | null = null
+    try {
+      xml = await fetchFeed(base + 'primary_doc.xml')
+    } catch {
+      try {
+        const idx = JSON.parse(await fetchFeed(base + 'index.json'))
+        const f = idx?.directory?.item?.find((x: { name: string }) => x.name.endsWith('.xml'))
+        if (f) xml = await fetchFeed(base + f.name)
+      } catch {
+        /* leave xml null */
+      }
+    }
+    const d = xml ? parseFormD(xml) : null
+    const row = {
+      item_id: it.id,
+      company: d?.company ?? it.title.replace(/^Form D filed: /, ''),
+      round: d ? (d.isFund ? 'Fund' : 'Private round') : 'Private round',
+      amount: d?.amountSold ?? null,
+      currency: 'USD',
+      amount_usd: d?.amountSold ?? null,
+      offering_total: d?.offeringTotal ?? null,
+      industry: d?.industry ?? null,
+      sector: d?.industry ?? null,
+      fund_type: d?.fundType ?? null,
+      is_fund: d?.isFund ?? false,
+      state: d?.state ?? null,
+      country: 'US',
+      first_sale_on: d?.firstSaleOn && /^\d{4}-\d{2}-\d{2}$/.test(d.firstSaleOn) ? d.firstSaleOn : null,
+      announced_on: it.published_at ? it.published_at.slice(0, 10) : null,
+      confidence: 'confirmed', // filed with the regulator
+      filing_url: it.url,
+    }
+    const { error: e2 } = await db.from('deals').upsert(row, { onConflict: 'item_id', ignoreDuplicates: true })
+    if (!e2) added++
+    await sleep(250) // stays well under the SEC's 10 requests/second
+  }
+  return { checked: todo.length, added }
+}
+
 async function main() {
   await syncSources()
   const report: { source: string; found: number; stored: number; error?: string }[] = []
@@ -101,6 +166,12 @@ async function main() {
   }
 
   console.table(report)
+  try {
+    const r = await enrichFormD()
+    console.log(`Form D details: ${r.added} of ${r.checked} filings read`)
+  } catch (e) {
+    console.warn('Form D details failed:', e instanceof Error ? e.message : e)
+  }
   const failed = report.filter((r) => r.error)
   if (failed.length) console.warn(`${failed.length} source(s) failed — check feed URLs marked verify:true`)
 }

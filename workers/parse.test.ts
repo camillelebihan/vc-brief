@@ -99,3 +99,39 @@ describe('SEC Form D index', () => {
     expect(days).toEqual(['2026-10-30', '2026-10-29'])
   })
 })
+
+import { formatUsd, parseFormD } from './formd'
+
+const FORMD = `<?xml version="1.0"?>
+<edgarSubmission>
+  <primaryIssuer>
+    <cik>0001999999</cik>
+    <entityName>ACME ROBOTICS INC</entityName>
+    <issuerAddress><street1>1 Main St</street1><city>Boston</city><stateOrCountry>MA</stateOrCountry></issuerAddress>
+  </primaryIssuer>
+  <offeringData>
+    <industryGroup><industryGroupType>Other Technology</industryGroupType></industryGroup>
+    <typeOfFiling><newOrAmendment><isAmendment>false</isAmendment></newOrAmendment><dateOfFirstSale><value>2026-10-15</value></dateOfFirstSale></typeOfFiling>
+    <offeringSalesAmounts><totalOfferingAmount>12000000</totalOfferingAmount><totalAmountSold>9500000</totalAmountSold></offeringSalesAmounts>
+  </offeringData>
+</edgarSubmission>`
+
+const FUND = FORMD.replace('<industryGroupType>Other Technology</industryGroupType>', '<industryGroupType>Pooled Investment Fund</industryGroupType><investmentFundInfo><investmentFundType>Venture Capital Fund</investmentFundType></investmentFundInfo>').replace('<totalOfferingAmount>12000000</totalOfferingAmount>', '<totalOfferingAmount>Indefinite</totalOfferingAmount>')
+
+describe('Form D details', () => {
+  it('reads company, industry, amounts, state and first sale', () => {
+    const d = parseFormD(FORMD)!
+    expect(d).toMatchObject({ company: 'ACME ROBOTICS INC', industry: 'Other Technology', isFund: false, offeringTotal: 12000000, amountSold: 9500000, state: 'MA', firstSaleOn: '2026-10-15', isAmendment: false })
+  })
+  it('flags venture funds and handles "Indefinite"', () => {
+    const d = parseFormD(FUND)!
+    expect(d.isFund).toBe(true)
+    expect(d.fundType).toBe('Venture Capital Fund')
+    expect(d.offeringTotal).toBeNull()
+  })
+  it('formats amounts', () => {
+    expect(formatUsd(9500000)).toBe('$9.5M')
+    expect(formatUsd(250000000)).toBe('$250M')
+    expect(formatUsd(1200000000)).toBe('$1.2B')
+  })
+})
