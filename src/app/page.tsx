@@ -40,12 +40,18 @@ function LessonCard({ className }: { className: string }) {
 }
 
 export default async function Home() {
-  const [news, research, medical, deals] = await Promise.all([
-    getLatestItems([...SOURCE_GROUPS.news, ...SOURCE_GROUPS.markets], 9),
+  const [top, vc, world, research, medical, deals] = await Promise.all([
+    getLatestItems([...SOURCE_GROUPS.vc, ...SOURCE_GROUPS.tech, ...SOURCE_GROUPS.markets], 3, 1),
+    getLatestItems(SOURCE_GROUPS.vc, 12, 2),
+    getLatestItems(SOURCE_GROUPS.world, 5, 1),
     getLatestItems(SOURCE_GROUPS.research, 3),
     getLatestItems(SOURCE_GROUPS.medical, 3),
     getDeals({ funds: false, days: 7, limit: 5, minAmount: 1_000_000 }),
   ]);
+  // Quick hits: VC & startup news not already in the top three, at most 2 per outlet.
+  const topIds = new Set((top ?? []).map((t) => t.id));
+  const quick = (vc ?? []).filter((x) => !topIds.has(x.id)).slice(0, 6);
+  const news = top;
   const live = !!news?.length;
   const tones = ["lilac", "ink", "mist"] as const;
   const updated = news?.[0]?.publishedAt;
@@ -73,14 +79,14 @@ export default async function Home() {
           </Link>
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Pill tone="lilac">{live && updated ? `Updated ${formatWhen(updated)}` : EDITION.label}</Pill>
+          <Pill tone="lilac">{live && updated ? `8:00 edition, updated ${formatWhen(updated)}` : EDITION.label}</Pill>
           <Pill tone="lime">{USER.streakDays}-day streak</Pill>
         </div>
       </header>
 
       <div className="md:px-3 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10 lg:px-8">
         <div className="min-w-0">
-          <Section title={live ? "Top of the news" : "Must-knows"} note={live ? "Newest first" : `${EDITION.readMinutes} min brief`}>
+          <Section title={live ? "Top of the news" : "Must-knows"} note={live ? "One per outlet, newest first" : `${EDITION.readMinutes} min brief`}>
             <div className="grid gap-3 md:grid-cols-2">
               {live
                 ? news!.slice(0, 3).map((it, i) => (
@@ -100,7 +106,7 @@ export default async function Home() {
 
           <Section title="Quick hits">
             {live ? (
-              <HeadlineList items={news!.slice(3, 9)} />
+              <HeadlineList items={quick} />
             ) : (
               <ul className="divide-y divide-line border-y border-line">
                 {by("quick_hit").map((s) => (
@@ -114,6 +120,12 @@ export default async function Home() {
               </ul>
             )}
           </Section>
+
+          {!!world?.length && (
+            <Section title="World & society" note="One story per outlet">
+              <HeadlineList items={world} />
+            </Section>
+          )}
 
           <Section title="Niche finds" note={research?.length ? "Newest research papers" : "Picked for novelty, not size"}>
             {research?.length ? (

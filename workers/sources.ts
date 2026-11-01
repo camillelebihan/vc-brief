@@ -141,6 +141,27 @@ export const SOURCES: Source[] = [
     isPress: true,
     allowFulltextLlm: false,
   },
+  ...press([
+    // [id, name, homepage, feed, region, sectors]
+    ['eu-startups', 'EU-Startups', 'https://www.eu-startups.com', 'https://www.eu-startups.com/category/funding/feed/', 'EU', ['vc', 'startups']],
+    ['crunchbase-news', 'Crunchbase News', 'https://news.crunchbase.com', 'https://news.crunchbase.com/feed/', 'US', ['vc', 'startups']],
+    ['frenchweb', 'FrenchWeb', 'https://www.frenchweb.fr', 'https://www.frenchweb.fr/feed', 'FR', ['vc', 'startups', 'tech']],
+    ['lesechos-startup', 'Les Echos — Start-up', 'https://www.lesechos.fr', 'https://services.lesechos.fr/rss/les-echos-start-up.xml', 'FR', ['vc', 'startups']],
+    ['lesechos-tech', 'Les Echos — Tech', 'https://www.lesechos.fr', 'https://services.lesechos.fr/rss/les-echos-tech-medias.xml', 'FR', ['tech']],
+    ['lesechos-marches', 'Les Echos — Marchés', 'https://www.lesechos.fr', 'https://services.lesechos.fr/rss/les-echos-finance-marches.xml', 'FR', ['markets']],
+    ['lesechos-monde', 'Les Echos — Monde', 'https://www.lesechos.fr', 'https://services.lesechos.fr/rss/les-echos-monde.xml', 'FR', ['world']],
+    ['lemonde-une', 'Le Monde', 'https://www.lemonde.fr', 'https://www.lemonde.fr/rss/une.xml', 'FR', ['world', 'society']],
+    ['lemonde-eco', 'Le Monde — Économie', 'https://www.lemonde.fr', 'https://www.lemonde.fr/economie/rss_full.xml', 'FR', ['markets']],
+    ['nyt-home', 'New York Times', 'https://www.nytimes.com', 'https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml', 'US', ['world', 'society']],
+    ['nyt-dealbook', 'NYT DealBook', 'https://www.nytimes.com', 'https://rss.nytimes.com/services/xml/rss/nyt/Dealbook.xml', 'US', ['markets', 'vc']],
+    ['nyt-tech', 'NYT Technology', 'https://www.nytimes.com', 'https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml', 'US', ['tech', 'ai']],
+    ['ft-home', 'Financial Times', 'https://www.ft.com', 'https://www.ft.com/rss/home', 'GLOBAL', ['world', 'markets']],
+    ['ft-tech', 'FT Technology', 'https://www.ft.com', 'https://www.ft.com/technology?format=rss', 'GLOBAL', ['tech']],
+    ['bbc-world', 'BBC News', 'https://www.bbc.com/news', 'https://feeds.bbci.co.uk/news/world/rss.xml', 'GLOBAL', ['world', 'society']],
+    ['bbc-business', 'BBC Business', 'https://www.bbc.com/news/business', 'https://feeds.bbci.co.uk/news/business/rss.xml', 'GLOBAL', ['markets']],
+    ['guardian-tech', 'The Guardian — Technology', 'https://www.theguardian.com', 'https://www.theguardian.com/uk/technology/rss', 'GLOBAL', ['tech', 'ai']],
+    ['yahoo-finance', 'Yahoo Finance', 'https://finance.yahoo.com', 'https://finance.yahoo.com/news/rssindex', 'US', ['markets']],
+  ]),
   {
     id: 'sifted',
     name: 'Sifted',
@@ -164,5 +185,13 @@ export const SOURCES: Source[] = [
     allowFulltextLlm: false,
   },
 ]
+
+/** Press sources share the same rules: headline + link + our own words only. */
+function press(rows: [string, string, string, string, Source['region'], string[]][]): Source[] {
+  return rows.map(([id, name, homepage, feedUrl, region, sectors]) => ({
+    id, name, homepage, feedUrl, region, sectors,
+    tier: 'signal', access: 'rss', isPress: true, allowFulltextLlm: false, verify: true,
+  }))
+}
 
 export const activeFeeds = () => SOURCES.filter((s) => s.feedUrl && (s.access === 'rss' || s.access === 'api'))

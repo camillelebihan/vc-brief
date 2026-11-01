@@ -3,6 +3,7 @@
 // (e.g. a local build), functions return null and pages fall back to sample data.
 import { cacheLife } from "next/cache";
 import { createClient } from "@supabase/supabase-js";
+import { SOURCES } from "../../workers/sources";
 
 export interface LiveItem {
   id: string;
@@ -27,24 +28,45 @@ export interface LiveDeal {
   filingUrl: string | null;
 }
 
+const byNeed = (...tags: string[]) => SOURCES.filter((x) => x.feedUrl && x.sectors.some((t) => tags.includes(t))).map((x) => x.id);
+
+/** Groups built from the source registry, so a new feed shows up without touching the pages. */
 export const SOURCE_GROUPS = {
-  news: ["maddyness", "techcrunch"],
-  markets: ["ecb-press", "fed-press"],
+  vc: byNeed("vc", "startups"),
+  tech: byNeed("tech", "ai").filter((id) => !id.startsWith("arxiv")),
+  markets: [...byNeed("markets"), "ecb-press", "fed-press"],
+  world: byNeed("world", "society"),
   research: ["arxiv-ai", "arxiv-quantum", "biorxiv", "medrxiv"],
   medical: ["biorxiv", "medrxiv"],
-} as const;
+};
 
 const SOURCE_NAMES: Record<string, string> = {
-  maddyness: "Maddyness",
-  techcrunch: "TechCrunch",
-  "ecb-press": "European Central Bank",
-  "fed-press": "Federal Reserve",
+  ...Object.fromEntries(SOURCES.map((x) => [x.id, x.name])),
   "arxiv-ai": "arXiv",
   "arxiv-quantum": "arXiv",
   biorxiv: "bioRxiv (preprint)",
   medrxiv: "medRxiv (preprint)",
+  "ecb-press": "European Central Bank",
+  "fed-press": "Federal Reserve",
   "sec-edgar-formd": "SEC filing",
 };
+
+/** "Les Echos — Start-up" and "Les Echos — Tech" count as one outlet when mixing. */
+const brand = (name: string) => name.split(" — ")[0].replace(/^NYT .*/, "New York Times").replace(/^FT .*/, "Financial Times").replace(/^BBC .*/, "BBC News");
+
+/** Keeps newest-first order but caps how many items one outlet can place. */
+export function diversify<T extends { sourceName: string }>(items: T[], limit: number, maxPerOutlet: number): T[] {
+  const count = new Map<string, number>();
+  const out: T[] = [];
+  for (const it of items) {
+    const b = brand(it.sourceName);
+    if ((count.get(b) ?? 0) >= maxPerOutlet) continue;
+    count.set(b, (count.get(b) ?? 0) + 1);
+    out.push(it);
+    if (out.length === limit) break;
+  }
+  return out;
+}
 
 function client() {
   const url = process.env.SUPABASE_URL;
@@ -55,7 +77,7 @@ function client() {
 
 const LIFE = { stale: 300, revalidate: 900, expire: 86400 };
 
-export async function getLatestItems(sourceIds: readonly string[], limit: number): Promise<LiveItem[] | null> {
+export async function getLatestItems(sourceIds: readonly string[], limit: number, maxPerOutlet = 99): Promise<LiveItem[] | null> {
   "use cache";
   cacheLife(LIFE);
   const db = client();
@@ -65,13 +87,14 @@ export async function getLatestItems(sourceIds: readonly string[], limit: number
     .select("id,title,url,source_id,published_at,author")
     .in("source_id", [...sourceIds])
     .not("published_at", "is", null)
+    .lte("published_at", new Date(Date.now() + 3600_000).toISOString()) // ignore items dated in the future
     .order("published_at", { ascending: false })
-    .limit(limit);
+    .limit(limit * 6);
   if (error) {
     console.error("getLatestItems", error.message);
     return null;
   }
-  return data.map((r) => ({
+  const rows = data.map((r) => ({
     id: r.id,
     title: r.title,
     url: r.url,
@@ -80,6 +103,7 @@ export async function getLatestItems(sourceIds: readonly string[], limit: number
     publishedAt: r.published_at,
     author: r.author,
   }));
+  return diversify(rows, limit, maxPerOutlet);
 }
 
 export async function getDeals(opts: { funds: boolean; days: number; limit: number; minAmount?: number }): Promise<LiveDeal[] | null> {

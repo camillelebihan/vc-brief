@@ -3,6 +3,7 @@ name: Collect feeds
 on:
   schedule:
     - cron: '7,37 * * * *'   # every 30 minutes (off the hour to avoid queue delays)
+    - cron: '52 6 * * *'     # 07:52 Paris (winter time): fresh pull just before the 8:00 edition, after the 7:30 newsletters
   workflow_dispatch: {}       # run by hand from the Actions tab
 
 jobs:
