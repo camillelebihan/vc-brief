@@ -7,7 +7,7 @@ const by = (slot: string) => STORIES.filter((s) => s.slot === slot);
 
 function Section({ title, note, children }: { title: string; note?: string; children: React.ReactNode }) {
   return (
-    <section className="mt-10 px-5">
+    <section className="mt-10 px-5 lg:px-0">
       <div className="mb-4 flex items-baseline justify-between">
         <h2 className="text-[22px] font-medium tracking-[-0.01em]">{title}</h2>
         {note && <span className="text-[13px] text-ink-soft">{note}</span>}
@@ -23,13 +23,13 @@ export default function Home() {
 
   return (
     <main>
-      <p className="bg-cobalt px-5 py-2 text-center text-[12px] text-white">
+      <p className="bg-cobalt px-5 py-2 text-center text-[12px] text-white lg:mx-8 lg:mt-4 lg:rounded-pill">
         Sample edition: layout only. Real stories start at milestone 2.
       </p>
 
-      <header className="px-5 pt-8">
+      <header className="px-5 pt-8 md:px-8 lg:pt-12">
         <div className="flex items-start justify-between">
-          <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em]">
+          <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em] md:text-[56px]">
             Morning,
             <br />
             {USER.name}
@@ -47,15 +47,18 @@ export default function Home() {
         </div>
       </header>
 
+      <div className="md:px-3 lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10 lg:px-8">
+      <div className="min-w-0">
       <Section title="Must-knows" note={`${EDITION.readMinutes} min brief`}>
-        <div className="space-y-3">
+        <div className="grid gap-3 md:grid-cols-2">
           {must.map((s, i) => (
-            <StoryCard key={s.slug} story={s} tone={tones[i % 3]} index={i + 1} />
+            <div key={s.slug} className={i === 0 ? "md:col-span-2" : ""}>
+              <StoryCard story={s} tone={tones[i % 3]} index={i + 1} />
+            </div>
           ))}
         </div>
       </Section>
-
-      <section className="mt-6 px-5">
+      <section className="mt-6 px-5 lg:hidden">
         <Link href="/learn/today" className="relative block rounded-[var(--radius-card)] bg-lime p-6">
           <p className="text-[13px]">
             {TODAY_LESSON.track}, lesson {TODAY_LESSON.number} of 20
@@ -67,6 +70,8 @@ export default function Home() {
           </span>
         </Link>
       </section>
+
+
 
       <Section title="Quick hits">
         <ul className="divide-y divide-line border-y border-line">
@@ -91,6 +96,21 @@ export default function Home() {
           ))}
         </div>
       </Section>
+
+      </div>
+      <aside className="min-w-0">
+      <section className="mt-10 hidden lg:block">
+        <Link href="/learn/today" className="relative block rounded-[var(--radius-card)] bg-lime p-6">
+          <p className="text-[13px]">
+            {TODAY_LESSON.track}, lesson {TODAY_LESSON.number} of 20
+          </p>
+          <h2 className="mt-3 max-w-[85%] text-[28px] leading-[1.1] font-light tracking-[-0.02em]">{TODAY_LESSON.title}</h2>
+          <p className="mt-4 text-[14px] text-ink/70">{TODAY_LESSON.minutes} min, with a 3-question quiz</p>
+          <span className="absolute top-5 right-5 grid size-10 place-items-center rounded-full bg-ink text-white" aria-hidden>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+          </span>
+        </Link>
+      </section>
 
       <Section title="Deals of the day" note="Sample rows">
         <div className="overflow-hidden rounded-[var(--radius-card)] bg-mist">
@@ -121,6 +141,8 @@ export default function Home() {
           ))}
         </div>
       </Section>
+      </aside>
+      </div>
     </main>
   );
 }

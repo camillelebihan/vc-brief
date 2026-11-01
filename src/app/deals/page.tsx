@@ -4,10 +4,10 @@ import { Pill } from "@/components/StoryCard";
 
 export default function Deals() {
   return (
-    <main className="px-5 pt-8">
-      <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em]">Deals</h1>
+    <main className="px-5 pt-8 md:px-8 lg:pt-12">
+      <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em] md:text-[52px]">Deals</h1>
       <p className="mt-1 text-[14px] text-ink-soft">Every round we found today, with its sources. Sample rows for now.</p>
-      <div className="mt-6 space-y-3">
+      <div className="mt-6 grid gap-3 md:grid-cols-2">
         {DEALS.map((d) => (
           <div key={d.company} className="rounded-[var(--radius-card)] bg-mist p-5">
             <div className="flex items-center gap-3">

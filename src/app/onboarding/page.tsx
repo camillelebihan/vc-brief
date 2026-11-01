@@ -13,7 +13,7 @@ export default function Onboarding() {
   const toggle = (t: string) => setPicked((p) => (p.includes(t) ? p.filter((x) => x !== t) : [...p, t]));
 
   return (
-    <main className="flex min-h-dvh flex-col px-5 pt-8 pb-8">
+    <main className="mx-auto flex min-h-dvh max-w-[560px] flex-col px-5 pt-8 pb-8 md:pt-16">
       <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em]">
         Choose your
         <br />

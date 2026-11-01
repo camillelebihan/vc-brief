@@ -14,7 +14,7 @@ export default async function StoryPage({ params }: PageProps<"/story/[slug]">) 
   if (!story) notFound();
 
   return (
-    <main>
+    <main className="mx-auto max-w-[720px] md:pt-6">
       <div className="flex items-center justify-between px-5 pt-5">
         <Link href="/" aria-label="Back to the brief" className="grid size-11 place-items-center rounded-full bg-mist">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
@@ -29,7 +29,7 @@ export default async function StoryPage({ params }: PageProps<"/story/[slug]">) 
           <Pill>{story.region}</Pill>
           {story.placeholder && <Pill tone="coral">Sample</Pill>}
         </div>
-        <h1 className="mt-4 text-[32px] leading-[1.1] font-light tracking-[-0.025em]">{story.headline}</h1>
+        <h1 className="mt-4 text-[32px] leading-[1.1] font-light tracking-[-0.025em] md:text-[44px]">{story.headline}</h1>
       </header>
       <StoryReader story={story} glossary={GLOSSARY} />
     </main>

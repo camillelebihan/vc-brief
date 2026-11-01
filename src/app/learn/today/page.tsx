@@ -5,8 +5,8 @@ import { Quiz } from "@/components/Quiz";
 export default function TodayLesson() {
   const l = TODAY_LESSON;
   return (
-    <main>
-      <div className="bg-lime px-5 pt-5 pb-8">
+    <main className="mx-auto max-w-[720px] md:pt-6">
+      <div className="bg-lime px-5 pt-5 pb-8 md:rounded-[var(--radius-card)] md:px-8">
         <Link href="/learn" aria-label="Back to the track" className="grid size-11 place-items-center rounded-full bg-paper/60">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
             <path d="M19 12H5m6-6-6 6 6 6" />

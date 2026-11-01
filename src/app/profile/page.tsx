@@ -12,8 +12,8 @@ function Row({ label, value }: { label: string; value: string }) {
 
 export default function Profile() {
   return (
-    <main className="px-5 pt-8">
-      <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em]">{USER.name}</h1>
+    <main className="mx-auto max-w-[640px] px-5 pt-8 lg:pt-12">
+      <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em] md:text-[52px]">{USER.name}</h1>
       <section className="mt-6">
         <Row label="Topics" value={USER.topics.join(", ")} />
         <Row label="Morning push" value="7:45" />

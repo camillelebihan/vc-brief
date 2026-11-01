@@ -15,10 +15,12 @@ const BADGES = [
 export default function Learn() {
   const today = 0; // Monday, lesson 1
   return (
-    <main className="px-5 pt-8">
-      <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em]">{TRACK.title}</h1>
+    <main className="px-5 pt-8 md:px-8 lg:pt-12">
+      <h1 className="text-[40px] leading-[1.05] font-light tracking-[-0.03em] md:text-[52px]">{TRACK.title}</h1>
       <p className="mt-1 text-[14px] text-ink-soft">Week 1 of 4, one lesson each weekday</p>
 
+      <div className="md:grid md:grid-cols-2 md:gap-8">
+      <div>
       <div className="mt-6 grid grid-cols-5 gap-2 text-center">
         {DAYS.map((d, i) => (
           <div key={d}>
@@ -43,10 +45,27 @@ export default function Learn() {
           <Pill tone="lime">{USER.streakDays}-day streak</Pill>
         </div>
       </Link>
+      </div>
+
+      <section className="mt-10 md:mt-6">
+        <h2 className="mb-4 text-[22px] font-medium">Badges</h2>
+        <div className="grid grid-cols-3 gap-3">
+          {BADGES.map((b) => {
+            const earned = USER.badges.includes(b.id);
+            return (
+              <div key={b.id} className={`rounded-2xl p-3 text-center text-[12px] ${earned ? "bg-lime" : "bg-mist text-ink-soft"}`}>
+                <span className={`mx-auto mb-2 block size-8 rounded-full ${earned ? "bg-ink" : "border-2 border-dashed border-line"}`} aria-hidden />
+                {b.label}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+      </div>
 
       <section className="mt-10">
         <h2 className="mb-4 text-[22px] font-medium">The four weeks</h2>
-        <ol className="space-y-3">
+        <ol className="grid gap-3 md:grid-cols-2">
           {TRACK.weeks.map((w) => (
             <li key={w.n} className="rounded-[var(--radius-card)] bg-mist p-5">
               <p className="text-[13px] text-ink-soft">Week {w.n}</p>
@@ -65,20 +84,6 @@ export default function Learn() {
         <p className="mt-4 text-[13px] text-ink-soft">Next tracks: AI, Deeptech, Finance, Other expertise.</p>
       </section>
 
-      <section className="mt-10">
-        <h2 className="mb-4 text-[22px] font-medium">Badges</h2>
-        <div className="grid grid-cols-3 gap-3">
-          {BADGES.map((b) => {
-            const earned = USER.badges.includes(b.id);
-            return (
-              <div key={b.id} className={`rounded-2xl p-3 text-center text-[12px] ${earned ? "bg-lime" : "bg-mist text-ink-soft"}`}>
-                <span className={`mx-auto mb-2 block size-8 rounded-full ${earned ? "bg-ink" : "border-2 border-dashed border-line"}`} aria-hidden />
-                {b.label}
-              </div>
-            );
-          })}
-        </div>
-      </section>
     </main>
   );
 }

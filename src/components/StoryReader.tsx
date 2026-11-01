@@ -207,11 +207,11 @@ export function StoryReader({ story, glossary }: { story: Story; glossary: Recor
       </div>
 
       {sheet && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40" onClick={() => setSheet(null)}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 md:items-center md:p-6" onClick={() => setSheet(null)}>
           <div
             role="dialog"
             aria-modal
-            className="w-full max-w-[440px] rounded-t-[var(--radius-card)] bg-paper p-6 pb-10"
+            className="w-full max-w-[480px] rounded-t-[var(--radius-card)] bg-paper p-6 pb-10 md:rounded-[var(--radius-card)] md:pb-6"
             onClick={(e) => e.stopPropagation()}
           >
             {sheet.kind === "source" ? (
