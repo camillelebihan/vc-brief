@@ -5,6 +5,8 @@ Every factual sentence links to its source; the database refuses to publish a st
 
 Product spec: the "VC Brief app — Product spec" doc in Claude.
 
+→ View it here: https://vc-brief-sigma.vercel.app/
+
 ## What's here (milestone 1)
 
 | Part | Where | Status |
