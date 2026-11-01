@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+/* Palette taken from the inspo screens: cobalt, lilac, lime, coral on white, dark-grey pills. */
+@theme {
+  --color-ink: #262626;
+  --color-ink-soft: #6b6b70;
+  --color-paper: #ffffff;
+  --color-mist: #f1f1f3;
+  --color-line: #e2e2e6;
+  --color-lilac: #d9c8f5;
+  --color-lilac-deep: #b9a1ea;
+  --color-lime: #e4f08e;
+  --color-cobalt: #4352d6;
+  --color-cobalt-soft: #e7e9fb;
+  --color-coral: #f06b3f;
+
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 28px;
+  --radius-pill: 999px;
+}
+
+html {
+  background: var(--color-cobalt);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01", "tnum";
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-cobalt);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Glossary terms: dotted underline, tap for definition */
+.term {
+  text-decoration: underline dotted 2px;
+  text-underline-offset: 4px;
+  text-decoration-color: var(--color-cobalt);
+  cursor: pointer;
+}
+
+/* Highlighted quote in evidence cards, like a marker on a printed page */
+.mark {
+  background: linear-gradient(transparent 12%, color-mix(in srgb, var(--color-lilac) 85%, transparent) 12%, color-mix(in srgb, var(--color-lilac) 85%, transparent) 92%, transparent 92%);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
