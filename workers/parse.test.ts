@@ -72,3 +72,30 @@ describe('robots.txt', () => {
     expect(disallowedPaths(r)).toEqual(['/'])
   })
 })
+
+import { formIndexUrl, parseFormIndex, recentWeekdays } from './sec'
+
+const IDX = `Description:           Daily Index of EDGAR Dissemination Feed by Form Type
+Last Data Received:    October 30, 2026
+
+Form Type   Company Name                                                  CIK         Date Filed  File Name
+---------------------------------------------------------------------------------------------------------------------------------------------
+10-Q        EXAMPLE CORP                                                  1000001     20261030    edgar/data/1000001/0001000001-26-000010.txt
+D           ACME ROBOTICS INC                                             1999999     20261030    edgar/data/1999999/0001999999-26-000001.txt
+D/A         OLD FUND LP                                                   1888888     20261030    edgar/data/1888888/0001888888-26-000002.txt
+`
+
+describe('SEC Form D index', () => {
+  it('keeps new Form D filings only and builds the filing page link', () => {
+    const items = parseFormIndex(IDX, 'sec-edgar-formd')
+    expect(items).toHaveLength(1)
+    expect(items[0].title).toBe('Form D filed: ACME ROBOTICS INC')
+    expect(items[0].url).toBe('https://www.sec.gov/Archives/edgar/data/1999999/000199999926000001/0001999999-26-000001-index.htm')
+    expect(items[0].publishedAt).toBe('2026-10-30T00:00:00.000Z')
+  })
+  it('builds the right index URL and skips weekends', () => {
+    expect(formIndexUrl(new Date('2026-10-30T12:00:00Z'))).toBe('https://www.sec.gov/Archives/edgar/daily-index/2026/QTR4/form.20261030.idx')
+    const days = recentWeekdays(new Date('2026-11-02T08:00:00Z'), 2).map((d) => d.toISOString().slice(0, 10))
+    expect(days).toEqual(['2026-10-30', '2026-10-29'])
+  })
+})

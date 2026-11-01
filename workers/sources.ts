@@ -11,6 +11,8 @@ export type Access = 'rss' | 'api' | 'page' | 'newsletter' | 'manual'
 
 export interface Source {
   id: string
+  /** 'feed' = RSS/Atom (default); 'sec-form-d' = SEC daily form index */
+  adapter?: 'feed' | 'sec-form-d'
   name: string
   homepage: string
   tier: Tier
@@ -30,13 +32,14 @@ export const SOURCES: Source[] = [
     name: 'SEC EDGAR — Form D filings',
     homepage: 'https://www.sec.gov/edgar',
     tier: 'primary',
-    access: 'rss',
-    feedUrl: 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=D&company=&dateb=&owner=include&count=100&output=atom',
+    access: 'api',
+    adapter: 'sec-form-d',
+    // Daily index, the route the SEC documents for automated tools (sec.gov/os/accessing-edgar-data)
+    feedUrl: 'https://www.sec.gov/Archives/edgar/daily-index/',
     region: 'US',
     sectors: ['vc'],
     isPress: false,
     allowFulltextLlm: true,
-    verify: true,
   },
   {
     id: 'ecb-press',
@@ -49,7 +52,6 @@ export const SOURCES: Source[] = [
     sectors: ['macro'],
     isPress: false,
     allowFulltextLlm: true,
-    verify: true,
   },
   {
     id: 'fed-press',
@@ -62,15 +64,14 @@ export const SOURCES: Source[] = [
     sectors: ['macro'],
     isPress: false,
     allowFulltextLlm: true,
-    verify: true,
   },
   {
     id: 'arxiv-ai',
     name: 'arXiv — AI and machine learning',
     homepage: 'https://arxiv.org',
     tier: 'primary',
-    access: 'api',
-    feedUrl: 'https://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.LG&sortBy=submittedDate&sortOrder=descending&max_results=50',
+    access: 'rss',
+    feedUrl: 'https://rss.arxiv.org/rss/cs.AI', // official RSS (info.arxiv.org/help/rss.html)
     region: 'GLOBAL',
     sectors: ['ai', 'research'],
     isPress: false,
@@ -81,8 +82,8 @@ export const SOURCES: Source[] = [
     name: 'arXiv — quantum physics',
     homepage: 'https://arxiv.org',
     tier: 'primary',
-    access: 'api',
-    feedUrl: 'https://export.arxiv.org/api/query?search_query=cat:quant-ph&sortBy=submittedDate&sortOrder=descending&max_results=30',
+    access: 'rss',
+    feedUrl: 'https://rss.arxiv.org/rss/quant-ph',
     region: 'GLOBAL',
     sectors: ['deeptech', 'research'],
     isPress: false,
@@ -94,7 +95,7 @@ export const SOURCES: Source[] = [
     homepage: 'https://www.biorxiv.org',
     tier: 'primary',
     access: 'rss',
-    feedUrl: 'https://connect.biorxiv.org/biorxiv_xml/bioengineering.xml',
+    feedUrl: 'https://connect.biorxiv.org/biorxiv_xml.php?subject=bioengineering+bioinformatics+synthetic_biology',
     region: 'GLOBAL',
     sectors: ['medtech', 'biotech', 'research'],
     isPress: false,
@@ -107,7 +108,7 @@ export const SOURCES: Source[] = [
     homepage: 'https://www.medrxiv.org',
     tier: 'primary',
     access: 'rss',
-    feedUrl: 'https://connect.medrxiv.org/medrxiv_xml/health_informatics.xml',
+    feedUrl: 'https://connect.medrxiv.org/medrxiv_xml.php?subject=Health_Informatics',
     region: 'GLOBAL',
     sectors: ['medtech', 'research'],
     isPress: false,
@@ -127,7 +128,6 @@ export const SOURCES: Source[] = [
     sectors: ['vc', 'startups'],
     isPress: true,
     allowFulltextLlm: false,
-    verify: true,
   },
   {
     id: 'techcrunch',
@@ -140,7 +140,6 @@ export const SOURCES: Source[] = [
     sectors: ['vc', 'startups', 'ai'],
     isPress: true,
     allowFulltextLlm: false,
-    verify: true,
   },
   {
     id: 'sifted',

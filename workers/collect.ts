@@ -5,6 +5,8 @@ import { createClient } from '@supabase/supabase-js'
 import { activeFeeds, SOURCES } from './sources'
 import { parseFeed, type RawItem } from './parse'
 import { isAllowed, USER_AGENT } from './robots'
+import { formIndexUrl, parseFormIndex, recentWeekdays } from './sec'
+import type { Source } from './sources'
 
 const dry = process.argv.includes('--dry')
 const url = process.env.SUPABASE_URL
@@ -18,6 +20,27 @@ async function fetchFeed(feedUrl: string): Promise<string> {
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   return res.text()
+}
+
+/** Fetches items for one source, whatever its adapter. */
+async function collectSource(s: Source): Promise<RawItem[]> {
+  if (s.adapter === 'sec-form-d') {
+    // Try the last 3 weekdays; the newest index may not be published yet.
+    const items: RawItem[] = []
+    for (const day of recentWeekdays(new Date(), 3)) {
+      const u = formIndexUrl(day)
+      if (!(await isAllowed(u))) throw new Error('blocked by robots.txt')
+      try {
+        items.push(...parseFormIndex(await fetchFeed(u), s.id))
+      } catch (e) {
+        if (!(e instanceof Error && e.message === 'HTTP 404')) throw e // 404 = holiday or not yet published
+      }
+      await new Promise((r) => setTimeout(r, 300))
+    }
+    return items
+  }
+  if (!(await isAllowed(s.feedUrl!))) throw new Error('blocked by robots.txt')
+  return parseFeed(await fetchFeed(s.feedUrl!), s.id)
 }
 
 async function syncSources() {
@@ -65,8 +88,7 @@ async function main() {
 
   for (const s of activeFeeds()) {
     try {
-      if (!(await isAllowed(s.feedUrl!))) throw new Error('blocked by robots.txt')
-      const items = parseFeed(await fetchFeed(s.feedUrl!), s.id)
+      const items = await collectSource(s)
       const stored = await store(items)
       report.push({ source: s.id, found: items.length, stored })
       if (db) await db.from('sources').update({ last_ok_at: new Date().toISOString(), last_error: null }).eq('id', s.id)
